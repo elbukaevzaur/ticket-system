@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Билет - abo-ride.info</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="ticket-card">
+            <div class="ticket-header">
+                <h1>abo-ride.info</h1>
+            </div>
+            <div class="ticket-title">
+                <h2>Билет в Германию</h2>
+            </div>
+            
+            <div class="qr-container">
+                <img src="{{.Ticket.QRCodePath}}" alt="QR код билета" class="qr-code">
+            </div>
+            
+            <div class="ticket-number">
+                <h3>{{.Ticket.TicketNumber}}</h3>
+                <div class="progress-bar">
+                    <div class="progress"></div>
+                </div>
+            </div>
+            
+            <div class="ticket-details">
+                <div class="detail-row">
+                    <div class="icon"><i class="fas fa-clock"></i></div>
+                    <div class="label">Действительно с</div>
+                    <div class="value">{{.Ticket.StartDate}} - {{.Ticket.StartTime}}</div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="icon"></div>
+                    <div class="label">Действительно до</div>
+                    <div class="value">{{.Ticket.EndDate}} - {{.Ticket.EndTime}}</div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="icon"></div>
+                    <div class="label">Объем</div>
+                    <div class="value">{{.Ticket.Coverage}}</div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="icon"></div>
+                    <div class="label">Сорт</div>
+                    <div class="value">{{.Ticket.TicketClass}}</div>
+                </div>
+            </div>
+            
+            <div class="ticket-owner">
+                <div class="detail-row">
+                    <div class="icon"><i class="fas fa-user"></i></div>
+                    <div class="label">Владелец билета</div>
+                    <div class="value">{{.Ticket.OwnerName}}</div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="icon"><i class="fas fa-calendar"></i></div>
+                    <div class="label">Дата рождения</div>
+                    <div class="value">{{.Ticket.BirthDate}}</div>
+                </div>
+            </div>
+            
+            <div class="ticket-info">
+                <p>Действителен по всей стране для любого количества поездок на всех пригородных поездах, транспортных ассоциациях и участвующих транспортных компаниях.</p>
+                <p>Билеты не подлежат передаче, обмену и возврату.</p>
+            </div>
+            
+            <div class="ticket-actions">
+                <button id="copyLink" class="button">Скопировать ссылку на билет</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const copyButton = document.getElementById('copyLink');
+            
+            copyButton.addEventListener('click', function() {
+                const ticketUrl = '{{.ShareURL}}';
+                
+                // Создаем временный элемент для копирования
+                const tempInput = document.createElement('input');
+                tempInput.value = ticketUrl;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                
+                alert('Ссылка на билет скопирована!');
+            });
+        });
+    </script>
+</body>
+</html>
+
