@@ -8,8 +8,8 @@ services:
     container_name: ticket-app
     restart: unless-stopped
     volumes:
-      - ../ticket-app-data:/app/data
-      - ../ticket-app-static_volume:/app/static
+      - ./data:/app/data
+      - ./static:/app/static
     environment:
       - DB_PATH=/app/data/tickets.db
     networks:
@@ -23,7 +23,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ../ticket-app-static_volume:/static:ro
+      - ./static:/app/static:ro
     depends_on:
       - app
     networks:
@@ -32,8 +32,4 @@ services:
 networks:
   app-network:
     driver: bridge
-
-volumes:
-  static_volume:
-    driver: local
 

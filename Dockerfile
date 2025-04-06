@@ -28,14 +28,14 @@ WORKDIR /app
 COPY --from=builder /app/ticket-app .
 
 # Копируем шаблоны и статические файлы
-COPY --from=builder /app/templates ./templates
-COPY --from=builder /app/static ./static
+COPY templates ./templates
+COPY static ./static
 
 # Создаем директорию для загрузок и устанавливаем права
-RUN mkdir -p /app/static/uploads && chmod -R 777 /app/static
+RUN mkdir -p /app/static/uploads && chmod -R 755 /app/static
 
 # Создаем директорию для базы данных
-RUN mkdir -p /app/data && chmod 777 /app/data
+RUN mkdir -p /app/data && chmod 755 /app/data
 
 # Открываем порт
 EXPOSE 8080
