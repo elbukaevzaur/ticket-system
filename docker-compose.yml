@@ -23,7 +23,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - static_volume:/static:ro
+      - ../ticket-app-static_volume:/static:ro
     depends_on:
       - app
     networks:

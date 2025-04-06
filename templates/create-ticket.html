@@ -3,126 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Создание билета - abo-ride.info</title>
+    <title>Создание билета</title>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <div class="card-header">
-                <h1 class="card-title">Создание билета</h1>
-                <p class="card-description">Заполните информацию для создания билета</p>
-            </div>
-            <div class="card-content">
-                <form action="/save-ticket" method="post" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="ticketNumber">Номер билета</label>
-                        <input type="text" id="ticketNumber" name="ticketNumber" placeholder="Например: 875728184860" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>QR-код билета</label>
-                        <div class="qr-upload">
-                            <div id="qrPreview" class="qr-preview">
-                                <p>QR-код не загружен</p>
-                            </div>
-                            <input type="file" id="qrCode" name="qrCode" accept="image/*" required>
-                            <button type="button" id="uploadButton" class="button button-outline">Загрузить QR-код</button>
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">Создание билета</h1>
+            <p class="card-description">Заполните информацию для создания билета</p>
+        </div>
+        <div class="card-content">
+            <form action="/save-ticket" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="ticketNumber">Номер билета</label>
+                    <input type="text" id="ticketNumber" name="ticketNumber" placeholder="Например: 875728184860" required>
+                </div>
+
+                <div class="form-group">
+                    <label>QR-код билета</label>
+                    <div class="qr-upload">
+                        <div id="qrPreview" class="qr-preview">
+                            <p>QR-код не загружен</p>
                         </div>
+                        <input type="file" id="qrCode" name="qrCode" accept="image/*" required>
+                        <button type="button" id="uploadButton" class="button button-outline">Загрузить QR-код</button>
                     </div>
-                    
+                </div>
+
+                <div class="form-group">
+                    <label for="ownerName">Владелец билета</label>
+                    <input type="text" id="ownerName" name="ownerName" placeholder="Имя Фамилия" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="birthDate">Дата рождения</label>
+                    <input type="text" id="birthDate" name="birthDate" placeholder="дд.мм.гггг" required>
+                </div>
+
+                <div class="form-row">
                     <div class="form-group">
-                        <label for="ownerName">Владелец билета</label>
-                        <input type="text" id="ownerName" name="ownerName" placeholder="Имя Фамилия" required>
+                        <label for="startDate">Действительно с (дата)</label>
+                        <input type="date" id="startDate" name="startDate" required>
                     </div>
-                    
                     <div class="form-group">
-                        <label for="birthDate">Дата рождения</label>
-                        <input type="text" id="birthDate" name="birthDate" placeholder="дд.мм.гггг" required>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="startDate">Действительно с (дата)</label>
-                            <input type="date" id="startDate" name="startDate" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="startTime">Время</label>
-                            <select id="startTime" name="startTime">
-                                <option value="00:00">00:00</option>
-                                <option value="06:00">06:00</option>
-                                <option value="12:00">12:00</option>
-                                <option value="18:00">18:00</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="endDate">Действительно до (дата)</label>
-                            <input type="date" id="endDate" name="endDate" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="endTime">Время</label>
-                            <select id="endTime" name="endTime">
-                                <option value="00:00">00:00</option>
-                                <option value="03:00" selected>03:00</option>
-                                <option value="06:00">06:00</option>
-                                <option value="12:00">12:00</option>
-                                <option value="18:00">18:00</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="coverage">Объем</label>
-                        <select id="coverage" name="coverage">
-                            <option value="по всей Германии">по всей Германии</option>
-                            <option value="региональный">региональный</option>
+                        <label for="startTime">Время</label>
+                        <select id="startTime" name="startTime">
+                            <option value="00:00">00:00</option>
+                            <option value="06:00">06:00</option>
+                            <option value="12:00">12:00</option>
+                            <option value="18:00">18:00</option>
                         </select>
                     </div>
-                    
+                </div>
+
+                <div class="form-row">
                     <div class="form-group">
-                        <label for="ticketClass">Сорт</label>
-                        <select id="ticketClass" name="ticketClass">
-                            <option value="1-й класс">1-й класс</option>
-                            <option value="2-й класс" selected>2-й класс</option>
+                        <label for="endDate">Действительно до (дата)</label>
+                        <input type="date" id="endDate" name="endDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="endTime">Время</label>
+                        <select id="endTime" name="endTime">
+                            <option value="00:00">00:00</option>
+                            <option value="03:00" selected>03:00</option>
+                            <option value="06:00">06:00</option>
+                            <option value="12:00">12:00</option>
+                            <option value="18:00">18:00</option>
                         </select>
                     </div>
-                    
-                    <button type="submit" class="button">Создать билет</button>
-                </form>
-            </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="coverage">Объем</label>
+                    <select id="coverage" name="coverage">
+                        <option value="по всей Германии">по всей Германии</option>
+                        <option value="региональный">региональный</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="ticketClass">Сорт</label>
+                    <select id="ticketClass" name="ticketClass">
+                        <option value="1-й класс">1-й класс</option>
+                        <option value="2-й класс" selected>2-й класс</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="button">Создать билет</button>
+            </form>
         </div>
     </div>
+</div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const qrInput = document.getElementById('qrCode');
-            const qrPreview = document.getElementById('qrPreview');
-            const uploadButton = document.getElementById('uploadButton');
-            
-            uploadButton.addEventListener('click', function() {
-                qrInput.click();
-            });
-            
-            qrInput.addEventListener('change', function() {
-                if (this.files && this.files[0]) {
-                    const reader = new FileReader();
-                    
-                    reader.onload = function(e) {
-                        qrPreview.innerHTML = '';
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        qrPreview.appendChild(img);
-                        uploadButton.textContent = 'Изменить QR-код';
-                    }
-                    
-                    reader.readAsDataURL(this.files[0]);
-                }
-            });
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const qrInput = document.getElementById('qrCode');
+        const qrPreview = document.getElementById('qrPreview');
+        const uploadButton = document.getElementById('uploadButton');
+
+        uploadButton.addEventListener('click', function() {
+            qrInput.click();
         });
-    </script>
+
+        qrInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    qrPreview.innerHTML = '';
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    qrPreview.appendChild(img);
+                    uploadButton.textContent = 'Изменить QR-код';
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    });
+</script>
 </body>
 </html>
 
