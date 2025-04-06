@@ -27,7 +27,6 @@ type Ticket struct {
 	TicketClass  string
 	TicketNumber string
 	QRCodePath   string
-	CreatedAt    time.Time
 }
 
 var (
@@ -38,31 +37,18 @@ var (
 func main() {
 	os.MkdirAll("static/uploads", 0755)
 
+	// Получаем путь к базе данных из переменной окружения или используем значение по умолчанию
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = "./tickets.db"
+	}
+
 	var err error
-	db, err = initDB()
+	db, err = sql.Open("sqlite3", dbPath)
 	if err != nil {
-		log.Fatalf("Ошибка инициализации базы данных: %v", err)
+		log.Fatalf("Ошибка подключения к базе данных: %v", err)
 	}
 	defer db.Close()
-
-	fs := http.FileServer(http.Dir("static"))
-	http.Handle("/static/", http.StripPrefix("/static/", fs))
-
-	http.HandleFunc("/", homeHandler)
-	http.HandleFunc("/create-ticket", createTicketHandler)
-	http.HandleFunc("/save-ticket", saveTicketHandler)
-	http.HandleFunc("/ticket/", viewTicketHandler)
-
-	port := "8080"
-	fmt.Printf("Сервер запущен на http://localhost:%s\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
-}
-
-func initDB() (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", "./tickets.db")
-	if err != nil {
-		return nil, err
-	}
 
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS tickets (
@@ -76,19 +62,26 @@ func initDB() (*sql.DB, error) {
 			coverage TEXT NOT NULL,
 			ticket_class TEXT NOT NULL,
 			ticket_number TEXT NOT NULL,
-			qr_code_path TEXT NOT NULL,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+			qr_code_path TEXT NOT NULL
 		)
 	`)
 	if err != nil {
-		return nil, err
+		log.Fatalf("Ошибка создания таблицы: %v", err)
 	}
 
-	return db, nil
-}
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	http.HandleFunc("/", homeHandler)
+	http.HandleFunc("/create-ticket", createTicketHandler)
+	http.HandleFunc("/save-ticket", saveTicketHandler)
+	http.HandleFunc("/ticket/", viewTicketHandler)
 
-func generateID() string {
-	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), time.Now().Unix())
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	fmt.Printf("Сервер запущен на http://localhost:%s\n", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -111,7 +104,7 @@ func saveTicketHandler(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseMultipartForm(10 << 20)
 
-	ticketID := generateID()
+	ticketID := fmt.Sprintf("%d", time.Now().UnixNano())
 	ownerName := r.FormValue("ownerName")
 	birthDate := r.FormValue("birthDate")
 	startDate := r.FormValue("startDate")
@@ -124,28 +117,23 @@ func saveTicketHandler(w http.ResponseWriter, r *http.Request) {
 
 	file, handler, err := r.FormFile("qrCode")
 	if err != nil {
-		http.Error(w, "Ошибка при загрузке QR-кода: "+err.Error(), http.StatusBadRequest)
+		http.Error(w, "Ошибка при загрузке QR-кода", http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
-
-	if !strings.HasPrefix(handler.Header.Get("Content-Type"), "image/") {
-		http.Error(w, "Загруженный файл не является изображением", http.StatusBadRequest)
-		return
-	}
 
 	filename := fmt.Sprintf("%s%s", ticketID, filepath.Ext(handler.Filename))
 	filePath := filepath.Join("static/uploads", filename)
 
 	dst, err := os.Create(filePath)
 	if err != nil {
-		http.Error(w, "Ошибка при сохранении файла: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Ошибка при сохранении файла", http.StatusInternalServerError)
 		return
 	}
 	defer dst.Close()
 
 	if _, err = io.Copy(dst, file); err != nil {
-		http.Error(w, "Ошибка при сохранении файла: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Ошибка при сохранении файла", http.StatusInternalServerError)
 		return
 	}
 
@@ -161,7 +149,7 @@ func saveTicketHandler(w http.ResponseWriter, r *http.Request) {
 		endDate, endTime, coverage, ticketClass, ticketNumber, qrCodePath)
 
 	if err != nil {
-		http.Error(w, "Ошибка при сохранении данных в базу: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Ошибка при сохранении данных", http.StatusInternalServerError)
 		return
 	}
 
@@ -169,7 +157,6 @@ func saveTicketHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func viewTicketHandler(w http.ResponseWriter, r *http.Request) {
-	// Извлекаем ID билета из URL
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) != 3 {
 		http.NotFound(w, r)
@@ -192,7 +179,7 @@ func viewTicketHandler(w http.ResponseWriter, r *http.Request) {
 		if err == sql.ErrNoRows {
 			http.NotFound(w, r)
 		} else {
-			http.Error(w, "Ошибка при получении данных билета: "+err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Ошибка при получении данных", http.StatusInternalServerError)
 		}
 		return
 	}

@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Создаем необходимые директории
+mkdir -p data
+mkdir -p nginx
+
+# Проверяем наличие файла конфигурации Nginx
+if [ ! -f nginx/nginx.conf ]; then
+    echo "Копирование конфигурации Nginx..."
+    cp nginx.conf nginx/
+fi
+
+# Запускаем контейнеры
+echo "Запуск приложения..."
+docker-compose up -d
+
+echo "Приложение запущено на http://localhost"
+echo "Для остановки используйте: docker-compose down"
+
