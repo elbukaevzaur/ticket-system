@@ -105,7 +105,7 @@ func saveTicketHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(10 << 20)
 
 	token := r.FormValue("token")
-	if token != "sadadaddad" {
+	if token != "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" {
 		http.Error(w, "Неправильный токен", http.StatusUnauthorized)
 		return
 	}
