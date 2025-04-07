@@ -427,17 +427,18 @@
 
         // Применение кадрирования
         applyCrop.addEventListener('click', function() {
-            if (!isCropping) return;
+            if (!isCropping || !originalImage) return;
 
             const selectionRect = cropSelection.getBoundingClientRect();
             const canvasRect = cropCanvas.getBoundingClientRect();
 
-            // Масштаб для перевода координат в реальные пиксели
-            const scaleX = cropCanvas.width / canvasRect.width;
-            const scaleY = cropCanvas.height / canvasRect.height;
+            // Вычисляем масштаб между отрисованным canvas и оригинальным изображением
+            const scaleX = originalImage.width / imagePosition.width;
+            const scaleY = originalImage.height / imagePosition.height;
 
-            const cropX = (selectionRect.left - canvasRect.left) * scaleX;
-            const cropY = (selectionRect.top - canvasRect.top) * scaleY;
+            // Получаем координаты выделенной области относительно canvas
+            const cropX = (selectionRect.left - canvasRect.left - imagePosition.x) * scaleX;
+            const cropY = (selectionRect.top - canvasRect.top - imagePosition.y) * scaleY;
             const cropWidth = selectionRect.width * scaleX;
             const cropHeight = selectionRect.height * scaleY;
 
@@ -446,8 +447,10 @@
             croppedCanvas.height = cropHeight;
 
             const ctx = croppedCanvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false; // Важно: отключить сглаживание!
+
             ctx.drawImage(
-                cropCanvas,
+                originalImage,
                 cropX, cropY, cropWidth, cropHeight,
                 0, 0, cropWidth, cropHeight
             );
