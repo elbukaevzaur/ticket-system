@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"fmt"
 	"html/template"
 	"io"
@@ -120,31 +121,81 @@ func saveTicketHandler(w http.ResponseWriter, r *http.Request) {
 	ticketClass := r.FormValue("ticketClass")
 	ticketNumber := r.FormValue("ticketNumber")
 
-	file, handler, err := r.FormFile("qrCode")
-	if err != nil {
-		http.Error(w, "Ошибка при загрузке QR-кода", http.StatusBadRequest)
-		return
+	// Проверяем, есть ли данные обработанного изображения
+	croppedQrCode := r.FormValue("croppedQrCode")
+	var qrCodePath string
+
+	if croppedQrCode != "" && strings.HasPrefix(croppedQrCode, "data:image") {
+		// Обрабатываем base64 изображение
+		// Извлекаем данные после "base64,"
+		parts := strings.Split(croppedQrCode, ",")
+		if len(parts) != 2 {
+			http.Error(w, "Неверный формат данных изображения", http.StatusBadRequest)
+			return
+		}
+
+		// Декодируем base64
+		decoded, err := base64.StdEncoding.DecodeString(parts[1])
+		if err != nil {
+			http.Error(w, "Ошибка декодирования изображения: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		// Определяем расширение файла из MIME типа
+		mimeType := strings.Split(strings.Split(parts[0], ":")[1], ";")[0]
+		var ext string
+		switch mimeType {
+		case "image/jpeg":
+			ext = ".jpg"
+		case "image/png":
+			ext = ".png"
+		case "image/gif":
+			ext = ".gif"
+		default:
+			ext = ".png" // По умолчанию PNG
+		}
+
+		// Создаем имя файла и путь
+		filename := fmt.Sprintf("%s%s", ticketID, ext)
+		filePath := filepath.Join("static/uploads", filename)
+
+		// Сохраняем файл
+		err = os.WriteFile(filePath, decoded, 0644)
+		if err != nil {
+			http.Error(w, "Ошибка при сохранении файла: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		qrCodePath = "/static/uploads/" + filename
+	} else {
+		// Если нет обработанного изображения, обрабатываем обычную загрузку файла
+		file, handler, err := r.FormFile("qrCode")
+		if err != nil {
+			http.Error(w, "Ошибка при загрузке QR-кода: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		defer file.Close()
+
+		filename := fmt.Sprintf("%s%s", ticketID, filepath.Ext(handler.Filename))
+		filePath := filepath.Join("static/uploads", filename)
+
+		dst, err := os.Create(filePath)
+		if err != nil {
+			http.Error(w, "Ошибка при сохранении файла: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer dst.Close()
+
+		if _, err = io.Copy(dst, file); err != nil {
+			http.Error(w, "Ошибка при сохранении файла: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		qrCodePath = "/static/uploads/" + filename
 	}
-	defer file.Close()
 
-	filename := fmt.Sprintf("%s%s", ticketID, filepath.Ext(handler.Filename))
-	filePath := filepath.Join("static/uploads", filename)
-
-	dst, err := os.Create(filePath)
-	if err != nil {
-		http.Error(w, "Ошибка при сохранении файла", http.StatusInternalServerError)
-		return
-	}
-	defer dst.Close()
-
-	if _, err = io.Copy(dst, file); err != nil {
-		http.Error(w, "Ошибка при сохранении файла", http.StatusInternalServerError)
-		return
-	}
-
-	qrCodePath := "/static/uploads/" + filename
-
-	_, err = db.Exec(`
+	// Сохраняем данные билета в базу данных
+	_, err := db.Exec(`
 		INSERT INTO tickets (
 			id, owner_name, birth_date, start_date, start_time, 
 			end_date, end_time, coverage, ticket_class, ticket_number, qr_code_path
@@ -154,7 +205,7 @@ func saveTicketHandler(w http.ResponseWriter, r *http.Request) {
 		endDate, endTime, coverage, ticketClass, ticketNumber, qrCodePath)
 
 	if err != nil {
-		http.Error(w, "Ошибка при сохранении данных", http.StatusInternalServerError)
+		http.Error(w, "Ошибка при сохранении данных: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -184,7 +235,7 @@ func viewTicketHandler(w http.ResponseWriter, r *http.Request) {
 		if err == sql.ErrNoRows {
 			http.NotFound(w, r)
 		} else {
-			http.Error(w, "Ошибка при получении данных", http.StatusInternalServerError)
+			http.Error(w, "Ошибка при получении данных: "+err.Error(), http.StatusInternalServerError)
 		}
 		return
 	}

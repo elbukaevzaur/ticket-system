@@ -30,7 +30,29 @@
                         <div id="qrPreview" class="qr-preview">
                             <p>QR-код не загружен</p>
                         </div>
+
+                        <!-- Контейнер для кадрирования -->
+                        <div id="cropContainer" class="crop-container" style="display: none;">
+                            <div class="crop-header">
+                                <h3>Выделите область QR-кода</h3>
+                            </div>
+                            <div class="crop-area">
+                                <canvas id="cropCanvas"></canvas>
+                                <div id="cropSelection" class="crop-selection"></div>
+                            </div>
+                            <div class="crop-actions">
+                                <button type="button" id="applyCrop" class="button button-small">Применить</button>
+                                <button type="button" id="cancelCrop" class="button button-small button-outline">Отмена</button>
+                            </div>
+                        </div>
+
                         <input type="file" id="qrCode" name="qrCode" accept="image/*" required>
+                        <input type="hidden" id="croppedQrCode" name="croppedQrCode">
+
+                        <div id="imageControls" class="image-controls" style="display: none;">
+                            <button type="button" id="cropButton" class="button button-outline">Вырезать QR-код</button>
+                        </div>
+
                         <button type="button" id="uploadButton" class="button button-outline">Загрузить QR-код</button>
                     </div>
                 </div>
@@ -102,10 +124,42 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Элементы DOM
         const qrInput = document.getElementById('qrCode');
         const qrPreview = document.getElementById('qrPreview');
         const uploadButton = document.getElementById('uploadButton');
+        const imageControls = document.getElementById('imageControls');
+        const cropButton = document.getElementById('cropButton');
+        const cropContainer = document.getElementById('cropContainer');
+        const cropCanvas = document.getElementById('cropCanvas');
+        const cropSelection = document.getElementById('cropSelection');
+        const applyCrop = document.getElementById('applyCrop');
+        const cancelCrop = document.getElementById('cancelCrop');
+        const croppedQrCodeInput = document.getElementById('croppedQrCode');
+        const ticketForm = document.getElementById('ticketForm');
 
+        // Переменные для работы с изображением
+        let originalImage = null;
+        let currentImage = null;
+        let isCropping = false;
+
+        // Переменные для кадрирования
+        let cropStartX = 0;
+        let cropStartY = 0;
+        let isDragging = false;
+        let isResizing = false;
+        let resizeHandle = '';
+        let canvasContext = cropCanvas.getContext('2d');
+
+        // Переменные для отслеживания позиции и размеров изображения на canvas
+        let imagePosition = {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0
+        };
+
+        // Загрузка изображения
         uploadButton.addEventListener('click', function() {
             qrInput.click();
         });
@@ -113,14 +167,325 @@
         qrInput.addEventListener('change', function() {
             if (this.files && this.files[0]) {
                 const reader = new FileReader();
+
                 reader.onload = function(e) {
-                    qrPreview.innerHTML = '';
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    qrPreview.appendChild(img);
-                    uploadButton.textContent = 'Изменить QR-код';
-                }
+                    // Сохраняем оригинальное изображение
+                    originalImage = new Image();
+                    originalImage.crossOrigin = "anonymous";
+                    originalImage.onload = function() {
+                        // Показываем превью и элементы управления
+                        qrPreview.innerHTML = '';
+
+                        // Создаем и добавляем изображение в превью
+                        currentImage = document.createElement('img');
+                        currentImage.src = e.target.result;
+                        currentImage.style.maxWidth = '100%';
+                        currentImage.style.maxHeight = '100%';
+                        qrPreview.appendChild(currentImage);
+
+                        // Показываем элементы управления
+                        imageControls.style.display = 'block';
+
+                        uploadButton.textContent = 'Изменить QR-код';
+                    };
+                    originalImage.src = e.target.result;
+                };
+
                 reader.readAsDataURL(this.files[0]);
+            }
+        });
+
+        // Инициализация кадрирования
+        cropButton.addEventListener('click', function() {
+            if (!originalImage) return;
+
+            // Скрываем превью и показываем интерфейс кадрирования
+            qrPreview.style.display = 'none';
+            imageControls.style.display = 'none';
+            cropContainer.style.display = 'block';
+
+            // Устанавливаем размеры canvas
+            const maxWidth = Math.min(400, window.innerWidth - 40);
+            const maxHeight = 400;
+
+            let canvasWidth = originalImage.width;
+            let canvasHeight = originalImage.height;
+
+            // Масштабируем изображение, если оно слишком большое
+            if (canvasWidth > maxWidth || canvasHeight > maxHeight) {
+                const ratio = Math.min(maxWidth / canvasWidth, maxHeight / canvasHeight);
+                canvasWidth = Math.floor(canvasWidth * ratio);
+                canvasHeight = Math.floor(canvasHeight * ratio);
+            }
+
+            cropCanvas.width = maxWidth;
+            cropCanvas.height = canvasHeight;
+
+            // Вычисляем позицию изображения на canvas (центрирование)
+            const imageX = Math.max(0, (maxWidth - canvasWidth) / 2);
+            const imageY = 0;
+
+            // Сохраняем позицию и размеры изображения
+            imagePosition = {
+                x: imageX,
+                y: imageY,
+                width: canvasWidth,
+                height: canvasHeight
+            };
+
+            // Очищаем canvas и рисуем изображение по центру
+            canvasContext.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
+            canvasContext.drawImage(originalImage, imageX, imageY, canvasWidth, canvasHeight);
+
+            // Инициализируем область выделения (начальный размер - 80% от изображения)
+            const initialWidth = Math.min(canvasWidth * 0.8, canvasWidth);
+            const initialHeight = Math.min(canvasHeight * 0.8, canvasHeight);
+
+            // Позиционируем область выделения по центру изображения
+            const initialLeft = imageX + (canvasWidth - initialWidth) / 2;
+            const initialTop = imageY + (canvasHeight - initialHeight) / 2;
+
+            cropSelection.style.left = initialLeft + 'px';
+            cropSelection.style.top = initialTop + 'px';
+            cropSelection.style.width = initialWidth + 'px';
+            cropSelection.style.height = initialHeight + 'px';
+
+            // Добавляем маркеры для изменения размера
+            cropSelection.innerHTML = `
+                    <div class="resize-handle top-left"></div>
+                    <div class="resize-handle top-right"></div>
+                    <div class="resize-handle bottom-left"></div>
+                    <div class="resize-handle bottom-right"></div>
+                `;
+
+            isCropping = true;
+        });
+
+        // Функции для обработки событий мыши и касаний
+        function getEventPosition(e, element) {
+            const rect = element.getBoundingClientRect();
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY) || 0;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        // Начало перетаскивания или изменения размера
+        function startDragOrResize(e) {
+            if (!isCropping) return;
+
+            e.preventDefault();
+
+            // Определяем, начинаем перетаскивание или изменение размера
+            const target = e.target;
+
+            if (target.classList.contains('resize-handle')) {
+                isResizing = true;
+                resizeHandle = '';
+
+                if (target.classList.contains('top-left')) resizeHandle = 'top-left';
+                else if (target.classList.contains('top-right')) resizeHandle = 'top-right';
+                else if (target.classList.contains('bottom-left')) resizeHandle = 'bottom-left';
+                else if (target.classList.contains('bottom-right')) resizeHandle = 'bottom-right';
+            } else {
+                isDragging = true;
+            }
+
+            // Запоминаем начальные координаты
+            const pos = getEventPosition(e, cropCanvas);
+            cropStartX = pos.x;
+            cropStartY = pos.y;
+
+            // Запоминаем текущие размеры и позицию выделения
+            const selectionRect = cropSelection.getBoundingClientRect();
+            const canvasRect = cropCanvas.getBoundingClientRect();
+
+            // Преобразуем координаты относительно canvas
+            const selectionLeft = selectionRect.left - canvasRect.left;
+            const selectionTop = selectionRect.top - canvasRect.top;
+
+            cropSelection.dataset.startLeft = selectionLeft;
+            cropSelection.dataset.startTop = selectionTop;
+            cropSelection.dataset.startWidth = selectionRect.width;
+            cropSelection.dataset.startHeight = selectionRect.height;
+        }
+
+        // Перетаскивание или изменение размера
+        function dragOrResize(e) {
+            if (!isCropping || (!isDragging && !isResizing)) return;
+
+            e.preventDefault();
+
+            const pos = getEventPosition(e, cropCanvas);
+            const currentX = pos.x;
+            const currentY = pos.y;
+
+            const deltaX = currentX - cropStartX;
+            const deltaY = currentY - cropStartY;
+
+            const startLeft = parseFloat(cropSelection.dataset.startLeft);
+            const startTop = parseFloat(cropSelection.dataset.startTop);
+            const startWidth = parseFloat(cropSelection.dataset.startWidth);
+            const startHeight = parseFloat(cropSelection.dataset.startHeight);
+
+            if (isDragging) {
+                // Перетаскивание области выделения
+                let newLeft = startLeft + deltaX;
+                let newTop = startTop + deltaY;
+
+                // Ограничиваем перемещение границами изображения
+                newLeft = Math.max(imagePosition.x, Math.min(newLeft, imagePosition.x + imagePosition.width - startWidth));
+                newTop = Math.max(imagePosition.y, Math.min(newTop, imagePosition.y + imagePosition.height - startHeight));
+
+                cropSelection.style.left = newLeft + 'px';
+                cropSelection.style.top = newTop + 'px';
+            } else if (isResizing) {
+                // Изменение размера области выделения
+                let newLeft = startLeft;
+                let newTop = startTop;
+                let newWidth = startWidth;
+                let newHeight = startHeight;
+
+                if (resizeHandle.includes('left')) {
+                    newLeft = startLeft + deltaX;
+                    newWidth = startWidth - deltaX;
+                } else if (resizeHandle.includes('right')) {
+                    newWidth = startWidth + deltaX;
+                }
+
+                if (resizeHandle.includes('top')) {
+                    newTop = startTop + deltaY;
+                    newHeight = startHeight - deltaY;
+                } else if (resizeHandle.includes('bottom')) {
+                    newHeight = startHeight + deltaY;
+                }
+
+                // Ограничиваем размеры и позицию
+                if (newWidth < 20) {
+                    if (resizeHandle.includes('left')) {
+                        newLeft = startLeft + startWidth - 20;
+                    }
+                    newWidth = 20;
+                }
+
+                if (newHeight < 20) {
+                    if (resizeHandle.includes('top')) {
+                        newTop = startTop + startHeight - 20;
+                    }
+                    newHeight = 20;
+                }
+
+                // Ограничиваем границами изображения
+                if (newLeft < imagePosition.x) {
+                    if (resizeHandle.includes('left')) {
+                        newWidth = startWidth + (startLeft - imagePosition.x);
+                    }
+                    newLeft = imagePosition.x;
+                }
+
+                if (newTop < imagePosition.y) {
+                    if (resizeHandle.includes('top')) {
+                        newHeight = startHeight + (startTop - imagePosition.y);
+                    }
+                    newTop = imagePosition.y;
+                }
+
+                // Ограничиваем правую и нижнюю границы
+                if (newLeft + newWidth > imagePosition.x + imagePosition.width) {
+                    newWidth = imagePosition.x + imagePosition.width - newLeft;
+                }
+
+                if (newTop + newHeight > imagePosition.y + imagePosition.height) {
+                    newHeight = imagePosition.y + imagePosition.height - newTop;
+                }
+
+                cropSelection.style.left = newLeft + 'px';
+                cropSelection.style.top = newTop + 'px';
+                cropSelection.style.width = newWidth + 'px';
+                cropSelection.style.height = newHeight + 'px';
+            }
+        }
+
+        // Окончание перетаскивания или изменения размера
+        function stopDragOrResize() {
+            isDragging = false;
+            isResizing = false;
+        }
+
+        // Добавляем обработчики событий для мыши
+        cropSelection.addEventListener('mousedown', startDragOrResize);
+        document.addEventListener('mousemove', dragOrResize);
+        document.addEventListener('mouseup', stopDragOrResize);
+
+        // Добавляем обработчики событий для сенсорных устройств
+        cropSelection.addEventListener('touchstart', startDragOrResize, { passive: false });
+        document.addEventListener('touchmove', dragOrResize, { passive: false });
+        document.addEventListener('touchend', stopDragOrResize);
+        document.addEventListener('touchcancel', stopDragOrResize);
+
+        // Применение кадрирования
+        applyCrop.addEventListener('click', function() {
+            if (!isCropping) return;
+
+            // Получаем координаты и размеры выделенной области
+            const selectionRect = cropSelection.getBoundingClientRect();
+            const canvasRect = cropCanvas.getBoundingClientRect();
+
+            // Преобразуем координаты относительно canvas
+            const cropX = (selectionRect.left - canvasRect.left);
+            const cropY = (selectionRect.top - canvasRect.top);
+            const cropWidth = selectionRect.width;
+            const cropHeight = selectionRect.height;
+
+            // Создаем новый canvas для вырезанного изображения
+            const croppedCanvas = document.createElement('canvas');
+            croppedCanvas.width = cropWidth;
+            croppedCanvas.height = cropHeight;
+
+            const ctx = croppedCanvas.getContext('2d');
+            ctx.drawImage(
+                cropCanvas,
+                cropX, cropY, cropWidth, cropHeight,
+                0, 0, cropWidth, cropHeight
+            );
+
+            // Получаем данные вырезанного изображения
+            const croppedImageData = croppedCanvas.toDataURL('image/png');
+
+            // Обновляем превью
+            qrPreview.innerHTML = '';
+            currentImage = document.createElement('img');
+            currentImage.src = croppedImageData;
+            currentImage.style.maxWidth = '100%';
+            currentImage.style.maxHeight = '100%';
+            qrPreview.appendChild(currentImage);
+
+            // Сохраняем вырезанное изображение
+            croppedQrCodeInput.value = croppedImageData;
+
+            // Сбрасываем состояние кадрирования
+            isCropping = false;
+            cropContainer.style.display = 'none';
+            qrPreview.style.display = 'flex';
+            imageControls.style.display = 'block';
+        });
+
+        // Отмена кадрирования
+        cancelCrop.addEventListener('click', function() {
+            isCropping = false;
+            cropContainer.style.display = 'none';
+            qrPreview.style.display = 'flex';
+            imageControls.style.display = 'block';
+        });
+
+        // Обработчик отправки формы
+        ticketForm.addEventListener('submit', function(e) {
+            // Проверяем, загружен ли QR-код
+            if (!qrInput.files.length && !croppedQrCodeInput.value) {
+                e.preventDefault();
+                alert('Пожалуйста, загрузите QR-код');
             }
         });
     });
