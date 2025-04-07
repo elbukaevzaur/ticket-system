@@ -437,10 +437,15 @@
             const scaleY = originalImage.height / imagePosition.height;
 
             // Получаем координаты выделенной области относительно canvas
-            const cropX = (selectionRect.left - canvasRect.left - imagePosition.x) * scaleX;
-            const cropY = (selectionRect.top - canvasRect.top - imagePosition.y) * scaleY;
-            const cropWidth = selectionRect.width * scaleX;
-            const cropHeight = selectionRect.height * scaleY;
+            const selectionLeft = parseFloat(cropSelection.style.left);
+            const selectionTop = parseFloat(cropSelection.style.top);
+            const selectionWidth = parseFloat(cropSelection.style.width);
+            const selectionHeight = parseFloat(cropSelection.style.height);
+
+            const cropX = (selectionLeft - imagePosition.x) * scaleX;
+            const cropY = (selectionTop - imagePosition.y) * scaleY;
+            const cropWidth = selectionWidth * scaleX;
+            const cropHeight = selectionHeight * scaleY;
 
             const croppedCanvas = document.createElement('canvas');
             croppedCanvas.width = cropWidth;
