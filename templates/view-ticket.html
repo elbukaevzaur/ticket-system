@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Билет - wsw-abo-ticket.info</title>
+    <title>Ticket - wsw-abo-ticket.info</title>
     <link rel="stylesheet" href="/static/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
@@ -14,7 +14,7 @@
                 <h1>wsw-abo-ticket.info</h1>
             </div>
             <div class="ticket-title">
-                <h2>Билет в Германию</h2>
+                <h2>Ticket nach Deutschland</h2>
             </div>
             
             <div class="qr-container">
@@ -33,25 +33,25 @@
             <div class="ticket-details">
                 <div class="detail-row">
                     <div class="icon"><i class="fas fa-clock"></i></div>
-                    <div class="label">Действительно с</div>
+                    <div class="label">Tatsächlich mit</div>
                     <div class="value">{{.Ticket.StartDate}} - {{.Ticket.StartTime}}</div>
                 </div>
                 
                 <div class="detail-row">
                     <div class="icon"></div>
-                    <div class="label">Действительно до</div>
+                    <div class="label">Gültig bis</div>
                     <div class="value">{{.Ticket.EndDate}} - {{.Ticket.EndTime}}</div>
                 </div>
                 
                 <div class="detail-row">
                     <div class="icon"></div>
-                    <div class="label">Объем</div>
+                    <div class="label">Volumen</div>
                     <div class="value">{{.Ticket.Coverage}}</div>
                 </div>
                 
                 <div class="detail-row">
                     <div class="icon"></div>
-                    <div class="label">Сорт</div>
+                    <div class="label">Vielfalt</div>
                     <div class="value">{{.Ticket.TicketClass}}</div>
                 </div>
             </div>
@@ -59,24 +59,24 @@
             <div class="ticket-owner">
                 <div class="detail-row">
                     <div class="icon"><i class="fas fa-user"></i></div>
-                    <div class="label">Владелец билета</div>
+                    <div class="label">Ticketinhaber</div>
                     <div class="value">{{.Ticket.OwnerName}}</div>
                 </div>
                 
                 <div class="detail-row">
                     <div class="icon"><i class="fas fa-calendar"></i></div>
-                    <div class="label">Дата рождения</div>
+                    <div class="label">Geburtsdatum</div>
                     <div class="value">{{.Ticket.BirthDate}}</div>
                 </div>
             </div>
             
             <div class="ticket-info">
-                <p>Действителен по всей стране для любого количества поездок на всех пригородных поездах, транспортных ассоциациях и участвующих транспортных компаниях.</p>
-                <p>Билеты не подлежат передаче, обмену и возврату.</p>
+                <p>Gültig bundesweit für beliebig viele Fahrten in allen S-Bahnen, Verkehrsverbünden und beteiligten Verkehrsunternehmen.</p>
+                <p>Tickets sind nicht übertragbar, nicht umtauschbar und nicht erstattungsfähig.</p>
             </div>
             
             <div class="ticket-actions">
-                <button id="copyLink" class="button">Скопировать ссылку на билет</button>
+                <button id="copyLink" class="button">Ticketlink kopieren</button>
             </div>
         </div>
     </div>

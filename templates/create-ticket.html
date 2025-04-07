@@ -3,46 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Создание билета</title>
+    <title>Ticket erstellen</title>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
 <div class="container">
     <div class="card">
         <div class="card-header">
-            <h1 class="card-title">Создание билета</h1>
-            <p class="card-description">Заполните информацию для создания билета</p>
+            <h1 class="card-title">Ticket erstellen</h1>
+            <p class="card-description">Geben Sie die Informationen ein, um ein Ticket zu erstellen</p>
         </div>
         <div class="card-content">
             <form action="/save-ticket" method="post" enctype="multipart/form-data">
                 <div class="form-group">
-                    <label for="token">Токен</label>
+                    <label for="token">Zeichen</label>
                     <input type="text" id="token" name="token" placeholder="" required>
                 </div>
                 <div class="form-group">
-                    <label for="ticketNumber">Номер билета</label>
-                    <input type="text" id="ticketNumber" name="ticketNumber" placeholder="Например: 875728184860" required>
+                    <label for="ticketNumber">Losnummer</label>
+                    <input type="text" id="ticketNumber" name="ticketNumber" placeholder="Zum Beispiel: 875728184860" required>
                 </div>
 
                 <div class="form-group">
-                    <label>QR-код билета</label>
+                    <label>Ticket-QR-Code</label>
                     <div class="qr-upload">
                         <div id="qrPreview" class="qr-preview">
-                            <p>QR-код не загружен</p>
+                            <p>QR-Code nicht geladen</p>
                         </div>
 
                         <!-- Контейнер для кадрирования -->
                         <div id="cropContainer" class="crop-container" style="display: none;">
                             <div class="crop-header">
-                                <h3>Выделите область QR-кода</h3>
+                                <h3>Wählen Sie den QR-Code-Bereich</h3>
                             </div>
                             <div class="crop-area">
                                 <canvas id="cropCanvas"></canvas>
                                 <div id="cropSelection" class="crop-selection"></div>
                             </div>
                             <div class="crop-actions">
-                                <button type="button" id="applyCrop" class="button button-small">Применить</button>
-                                <button type="button" id="cancelCrop" class="button button-small button-outline">Отмена</button>
+                                <button type="button" id="applyCrop" class="button button-small">Anwenden</button>
+                                <button type="button" id="cancelCrop" class="button button-small button-outline">Stornieren</button>
                             </div>
                         </div>
 
@@ -50,30 +50,30 @@
                         <input type="hidden" id="croppedQrCode" name="croppedQrCode">
 
                         <div id="imageControls" class="image-controls" style="display: none;">
-                            <button type="button" id="cropButton" class="button button-outline">Вырезать QR-код</button>
+                            <button type="button" id="cropButton" class="button button-outline">QR-Code ausschneiden</button>
                         </div>
 
-                        <button type="button" id="uploadButton" class="button button-outline">Загрузить QR-код</button>
+                        <button type="button" id="uploadButton" class="button button-outline">QR-Code herunterladen</button>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="ownerName">Владелец билета</label>
-                    <input type="text" id="ownerName" name="ownerName" placeholder="Имя Фамилия" required>
+                    <label for="ownerName">Ticketinhaber</label>
+                    <input type="text" id="ownerName" name="ownerName" placeholder="Vorname Nachname" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="birthDate">Дата рождения</label>
-                    <input type="text" id="birthDate" name="birthDate" placeholder="дд.мм.гггг" required>
+                    <label for="birthDate">Geburtsdatum</label>
+                    <input type="text" id="birthDate" name="birthDate" placeholder="tt.mm.jjjj" required>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="startDate">Действительно с (дата)</label>
+                        <label for="startDate">Gültig ab (Datum)</label>
                         <input type="date" id="startDate" name="startDate" required>
                     </div>
                     <div class="form-group">
-                        <label for="startTime">Время</label>
+                        <label for="startTime">Zeit</label>
                         <select id="startTime" name="startTime">
                             <option value="00:00">00:00</option>
                             <option value="06:00">06:00</option>
@@ -85,11 +85,11 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="endDate">Действительно до (дата)</label>
+                        <label for="endDate">Gültig bis (Datum)</label>
                         <input type="date" id="endDate" name="endDate" required>
                     </div>
                     <div class="form-group">
-                        <label for="endTime">Время</label>
+                        <label for="endTime">Zeit</label>
                         <select id="endTime" name="endTime">
                             <option value="00:00">00:00</option>
                             <option value="03:00" selected>03:00</option>
@@ -101,22 +101,22 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="coverage">Объем</label>
+                    <label for="coverage">Volumen</label>
                     <select id="coverage" name="coverage">
-                        <option value="по всей Германии">по всей Германии</option>
-                        <option value="региональный">региональный</option>
+                        <option value="по всей Германии">in ganz Deutschland</option>
+                        <option value="региональный">regional</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label for="ticketClass">Сорт</label>
+                    <label for="ticketClass">Vielfalt</label>
                     <select id="ticketClass" name="ticketClass">
-                        <option value="1-й класс">1-й класс</option>
-                        <option value="2-й класс" selected>2-й класс</option>
+                        <option value="1-й класс">1. Klasse</option>
+                        <option value="2-й класс" selected>2. Klasse</option>
                     </select>
                 </div>
 
-                <button type="submit" class="button">Создать билет</button>
+                <button type="submit" class="button">Ticket erstellen</button>
             </form>
         </div>
     </div>
