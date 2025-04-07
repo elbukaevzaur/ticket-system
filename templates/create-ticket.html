@@ -429,17 +429,18 @@
         applyCrop.addEventListener('click', function() {
             if (!isCropping) return;
 
-            // Получаем координаты и размеры выделенной области
             const selectionRect = cropSelection.getBoundingClientRect();
             const canvasRect = cropCanvas.getBoundingClientRect();
 
-            // Преобразуем координаты относительно canvas
-            const cropX = (selectionRect.left - canvasRect.left);
-            const cropY = (selectionRect.top - canvasRect.top);
-            const cropWidth = selectionRect.width;
-            const cropHeight = selectionRect.height;
+            // Масштаб для перевода координат в реальные пиксели
+            const scaleX = cropCanvas.width / canvasRect.width;
+            const scaleY = cropCanvas.height / canvasRect.height;
 
-            // Создаем новый canvas для вырезанного изображения
+            const cropX = (selectionRect.left - canvasRect.left) * scaleX;
+            const cropY = (selectionRect.top - canvasRect.top) * scaleY;
+            const cropWidth = selectionRect.width * scaleX;
+            const cropHeight = selectionRect.height * scaleY;
+
             const croppedCanvas = document.createElement('canvas');
             croppedCanvas.width = cropWidth;
             croppedCanvas.height = cropHeight;
@@ -451,10 +452,8 @@
                 0, 0, cropWidth, cropHeight
             );
 
-            // Получаем данные вырезанного изображения
             const croppedImageData = croppedCanvas.toDataURL('image/png');
 
-            // Обновляем превью
             qrPreview.innerHTML = '';
             currentImage = document.createElement('img');
             currentImage.src = croppedImageData;
@@ -462,10 +461,8 @@
             currentImage.style.maxHeight = '100%';
             qrPreview.appendChild(currentImage);
 
-            // Сохраняем вырезанное изображение
             croppedQrCodeInput.value = croppedImageData;
 
-            // Сбрасываем состояние кадрирования
             isCropping = false;
             cropContainer.style.display = 'none';
             qrPreview.style.display = 'flex';
