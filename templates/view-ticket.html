@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Билет - abo-ride.info</title>
+    <title>Билет - wsw-abo-ticket.info</title>
     <link rel="stylesheet" href="/static/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
@@ -11,7 +11,7 @@
     <div class="container">
         <div class="ticket-card">
             <div class="ticket-header">
-                <h1>abo-ride.info</h1>
+                <h1>wsw-abo-ticket.info</h1>
             </div>
             <div class="ticket-title">
                 <h2>Билет в Германию</h2>
@@ -20,11 +20,13 @@
             <div class="qr-container">
                 <img src="{{.Ticket.QRCodePath}}" alt="QR код билета" class="qr-code">
             </div>
-            
+
             <div class="ticket-number">
                 <h3>{{.Ticket.TicketNumber}}</h3>
-                <div class="progress-bar">
-                    <div class="progress"></div>
+                <div class="mvg-animation-container">
+                    <div class="mvg-animation">
+                        <img src="/static/images/mvg-logo.png" alt="MVG" class="mvg-logo">
+                    </div>
                 </div>
             </div>
             

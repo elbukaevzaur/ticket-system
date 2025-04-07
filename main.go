@@ -104,6 +104,11 @@ func saveTicketHandler(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseMultipartForm(10 << 20)
 
+	token := r.FormValue("token")
+	if token != "sadadaddad" {
+		http.Error(w, "Неправильный токен", http.StatusUnauthorized)
+		return
+	}
 	ticketID := fmt.Sprintf("%d", time.Now().UnixNano())
 	ownerName := r.FormValue("ownerName")
 	birthDate := r.FormValue("birthDate")
